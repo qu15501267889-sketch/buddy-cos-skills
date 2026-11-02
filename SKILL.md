@@ -414,6 +414,7 @@ metadata:
 | 换背景选型规则 | `references/background-replacement.md` |
 | 背景替换 + 强档特效实录模板 | `references/bg-swap-strong-fx.md` |
 | 桌面软件抢显存实测 | `references/desktop-vram-contention.md` |
+| **显存碎片化：越跑越慢的根因与启动参数调优（必读）** | `references/vram-fragmentation-and-tuning.md` |
 | 实测成片验收记录 | `references/output-acceptance-cases.md` |
 | 识图判读与背景选型实证 | `references/vision-id-and-background-selection.md` |
 | 王者荣耀角色官方资料查证 | `references/hok-character-research.md` |
@@ -455,6 +456,7 @@ metadata:
 12. **替他拍板 / 跳步** → 违反铁律一，最高优先级事故。停、问、等。
 13. **宣布默认参数** → 违反铁律四。问，不宣布。
 14. **提示词用省略式** → 违反铁律三。逐张全文。
+15. **连续跑越跑越慢** → 不是模型问题，是显存碎片化。签名：功耗掉到 45-75W（满载应 127-144W）、显存余量单调递减（563→291→172→110MB）、单步从 64 秒爬到 136 秒。**先看功耗再下结论**，别拿瞬时快照判死锁。根因与解法见 `references/vram-fragmentation-and-tuning.md`。**「固定工作流」或「固定分辨率」都治不了它**——碎片来自动态层加载，不来自提交方式。
 
 ---
 

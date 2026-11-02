@@ -19,3 +19,5 @@
 - 2026-11-02 执行模型：默认 Q8_0 **20步**（当单拍板「20步吧」，原 40步）；20步含模型重载实测 ≈15 分钟/张（大乔单 _007 对比样）。默认档位属用户拍板事项，agent 不得自行变更。
 - 2026-11-02 模板：**不写负面提示词，维持四段**（定位句/保持不变/处理内容/一致性）；需求清单里「五段含严禁」一项作废，以本行为准。
 - 2026-11-02 流程：每步必须停下问，「继续」= 只推进一步；模型/档位/步数/参数由用户拍板，agent 不得宣布默认值。
+
+- 2026-11-02 显存调优：启动必须用 start_comfyui_novram.bat（参数 --disable-cuda-malloc --disable-smart-memory --reserve-vram 0.1），**不要用带 --reserve-vram 1 的 restart_comfyui.cmd**（保留 1GB 反而更慢）；用户级环境变量 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True 已永久设置。实测：同一进程第 1 张 64 秒/步、第 2 张 136 秒/步；改 native+expandable 后第 2 张降到 98 秒/步。
