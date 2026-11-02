@@ -21,3 +21,5 @@
 - 2026-11-02 流程：每步必须停下问，「继续」= 只推进一步；模型/档位/步数/参数由用户拍板，agent 不得宣布默认值。
 
 - 2026-11-02 显存调优：启动必须用 start_comfyui_novram.bat（参数 --disable-cuda-malloc --disable-smart-memory --reserve-vram 0.1），**不要用带 --reserve-vram 1 的 restart_comfyui.cmd**（保留 1GB 反而更慢）；用户级环境变量 PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True 已永久设置。实测：同一进程第 1 张 64 秒/步、第 2 张 136 秒/步；改 native+expandable 后第 2 张降到 98 秒/步。
+
+- 2026-11-02 显存调优（修正）：**不要设 --reserve-vram**。上一条记的 0.1 实测有害——第 4 步 41 秒，第 5 步断崖到 163 秒（ComfyUI 以为显存够，塞满后被迫大量换出）。保持默认 600MB。最终参数：--disable-cuda-malloc + --disable-smart-memory，环境变量 expandable_segments:True。

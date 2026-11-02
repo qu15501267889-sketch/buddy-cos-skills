@@ -60,11 +60,33 @@ loaded partially; 1245.74 MB usable, 1090.88 MB loaded, 6405.00 MB offloaded
 - **代价**：每张多 1-2 分钟重载模型（对 30 步任务占 ~3%）
 - **风险**：无
 
-### `--reserve-vram 0.1`
+### `--reserve-vram` —— ⚠️ **别调低，2026-11-02 实测有害**
 
-- **作用**：把 ComfyUI 自扣的 600MB 缓冲压到 100MB，多出 500MB 给模型
-- **依据**：`model_management.py:877-884`，`EXTRA_RESERVED_VRAM = 600MB`（Windows 默认）；`minimum_inference_memory() = 0.8GB + EXTRA_RESERVED_VRAM`
-- **风险**：留太少，系统图形界面可能卡顿，显存突然不足时可能崩。**不要设 0**，0.1 是下限。
+- **默认值**：Windows 上 600MB（`model_management.py:877-884`，`EXTRA_RESERVED_VRAM = 600MB`）
+- **曾经的建议**：压到 0.1 挤出 500MB
+- **实测后果（2026-11-02 18:40，20 步任务）**：
+
+```
+1/20 [01:07]  67 秒
+2/20 [01:41]  51 秒
+3/20 [02:23]  41 秒
+4/20 [03:04]  41 秒    ← 到这里都很正常
+5/20 [04:49] 104 秒    ← 断崖
+6/20 [07:32] 163 秒
+7/20 [10:15] 164 秒
+功耗 39.67W，显存利用率 1%
+```
+
+- **机理**：把保留压到 0.1GB 后，ComfyUI 以为可用显存多了 500MB，尽量把模型层往显存里塞；塞满到第 5 步无路可走，只能大量换出 → 断崖式劣化，之后每步 2.7 分钟
+- **结论**：**保持默认，不设这个参数**。挤显存挤出来的是悬崖，不是速度。
+
+### 失败的组合
+
+| 组合 | 结果 |
+|---|---|
+| native + expandable | 第 1 张 22-32 秒，第 2 张 98-136 秒（翻 4 倍） |
+| native + expandable + `--disable-smart-memory` | 第 1 张 66-82 秒，第 2 张 68-77 秒（**持平，稳住了**） |
+| 上述 + `--reserve-vram 0.1` | 前 4 步 41 秒，第 5 步起 163 秒（**断崖**） |
 
 ### 配套：环境变量（用户级，永久）
 
@@ -84,8 +106,7 @@ set PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 .\python_embeded\python.exe -s ComfyUI\main.py ^
   --windows-standalone-build ^
   --disable-cuda-malloc ^
-  --disable-smart-memory ^
-  --reserve-vram 0.1
+  --disable-smart-memory
 ```
 
 脚本：`D:\AI\ComfyUI_windows_portable\start_comfyui_novram.bat`
