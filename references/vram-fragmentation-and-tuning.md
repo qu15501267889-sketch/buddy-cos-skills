@@ -157,3 +157,88 @@ curl -s "http://127.0.0.1:8188/history?max_items=5"
 - 效果相当于 offload 量从 6.4GB 降到 4.5GB，碎片自然大减
 
 **如果 8K 或高频批量是常驻需求，换 24G 卡是唯一解，不是技巧问题。**
+
+
+---
+
+# 九、真正的主犯：8916MB 的文本编码器（2026-11-02 晚追加）
+
+## 9.1 之前一直找错对象
+
+前面八节都在调 **分配器** 和 **碎片**，但日志里的真实构成是：
+
+```
+Model QwenImage21TEModel_ prepared for dynamic VRAM loading. 8916 MB Staged
+Model QwenImage21         prepared for dynamic VRAM loading. 7100 MB
+Model WanVAE              prepared for dynamic VRAM loading.  644 MB
+────────────────────────────────────────────────────────────
+合计 16660 MB  →  要塞进 8188 MB 的卡
+```
+
+**文本编码器 8916MB，比扩散模型还大。** 而它的使用次数完全不同：
+
+| 模型 | 大小 | 每张使用次数 |
+|---|---|---|
+| QwenImage21TEModel_（文本编码器） | 8.9 GB | **1 次**（prompt 编码） |
+| QwenImage21（扩散模型） | 7.1 GB | **20-30 次**（每步都要） |
+
+## 9.2 dynamic VRAM 的资源分配是反的
+
+启用 dynamic VRAM 时，8.9G 的编码器先被 staged 进来，用完**释放不干净**，导致扩散模型只剩 2.5GB：
+
+```
+Requested to load QwenImage21TEModel_   8916MB Staged
+Requested to load QwenImage21
+loaded partially; 2522 MB usable, 5011 MB offloaded
+```
+
+**一次性用品霸占了 9GB，长期住户只能睡走廊。** 5GB 每步换进换出 → 第 5-7 步断崖到 162 秒。
+
+## 9.3 解法：`--disable-dynamic-vram --lowvram`
+
+```python
+# cli_args.py:170
+--lowvram   help="Doesn't do anything if dynamic vram is enabled.
+                    If dynamic vram isn't being used this option makes
+                    the text encoders run on the CPU."
+
+# cli_args.py:318
+def enables_dynamic_vram():
+    return not args.disable_dynamic_vram and not args.highvram and ...
+```
+
+两个参数必须**成对使用**：`--lowvram` 单独加没有用，因为 dynamic vram 默认开着。
+
+预期：编码器 8.9GB 搬到 CPU（每张慢 30-60 秒，一次性），扩散模型 7.1GB 独占显存，offload 接近 0，20-30 步全程稳定。
+
+**代价**：prompt 编码在 CPU 上跑，每张多 30-60 秒。对 20-30 步的任务完全值得。
+
+## 9.4 关键教训：`--disable-smart-memory` 是死参数
+
+日志里每次任务结束都是：
+
+```
+[INFO] 0 models unloaded.
+```
+
+**模型从头到尾没被卸载过。** 这个参数在当前版本（0.37.0 + comfy-aimdo 0.5.5）没有实际作用，挂着只会让排查结论失真（曾经据此误判「第 2 张持平=有效」）。
+
+## 9.5 磁盘类型必须查
+
+```
+C:  953 GB  NVMe SSD
+D: 1863 GB  WDC WD20EZBX  HDD SATA   ← ComfyUI 和全部模型在这
+```
+
+- **`--fast-disk` 绝对不能加**：它强制用磁盘做 offload，HDD 上比 RAM 慢一个数量级
+- HDD 上首次加载 8.9GB 编码器就要一分多钟，这是冷启动慢的一部分
+- 若长期使用，把 `models/` 目录迁到 NVMe 是实打实的收益
+
+## 9.6 参数演进史（别再走回头路）
+
+| 时间 | 配置 | 结果 | 结论 |
+|---|---|---|---|
+| 18:00 | native + expandable | 第 1 张 22-32s，第 2 张 98-136s | 有改善，仍劣化 |
+| 18:30 | + `--disable-smart-memory` | 8 步短任务看着持平 | **假象，参数无效** |
+| 18:40 | + `--reserve-vram 0.1` | 第 5 步断崖 163s | **有害，撤销** |
+| 19:20 | `--disable-dynamic-vram --lowvram` | 待实测 | 方向：重排资源优先级 |
