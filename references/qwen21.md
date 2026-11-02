@@ -34,7 +34,9 @@
 
 ## 黑图根因（GGUF 必读）
 - Q8_0 GGUF 用默认 `UnetLoaderGGUF`（dequant_dtype=default）→ 反量化出 NaN → latent 全 NaN → VAEDecode 裁剪成 0 → **全黑图**。
-- 必须用 `UnetLoaderGGUFAdvanced`，显式三参数缺一不可：`dequant_dtype=float32`、`patch_dtype=float16`、`patch_on_device=true（BOOLEAN 类型，true=补丁驻 GPU；服务端会把字符串 coerce 成布尔，实测两次成功出图 history 里均为 True）`。float32 反量化后 latent 干净（absmax≈16，0 NaN）。
+- 必须用 `UnetLoaderGGUFAdvanced`，显式三参数缺一不可：`dequant_dtype=float16`、`patch_dtype=float16`、`patch_on_device=true（BOOLEAN 类型，true=补丁驻 GPU；服务端会把字符串 coerce 成布尔，实测两次成功出图 history 里均为 True）`。
+  - **2026-11-02 变更**：`dequant_dtype` 由 `float32` 改为 **`float16`**，按用户 ComfyUI 画布节点实配对齐（画布截图：模型 qwen-image-2.1-UC-Q8_0.gguf / 反量化 float16 / 补丁 float16 / 设备上补丁 true）。
+  - 历史安全值 `float32` 的实测结论（latent 干净，absmax≈16，0 NaN）仍然成立，只是精度更高、显存占用更大。**float16 尚未在本机 API 通道实测**——首张出图必须立刻验非黑图；若黑图，回滚 `dequant_dtype=float32` 再试。
 - 图生图编辑接法：`LoadImage` → `TextEncodeQwenImage21` 的 `images` 输入（API key=`images.image_1`，可多图 image_1..image_16）。
 - cfg=1.0、euler、simple、40 步；resolution=2048 出 2K（参考图按比例缩放，32 倍数）。
 

@@ -21,8 +21,8 @@ v2.1.0（2026-10-26）：超分阶段已移除——不做 8K，交付止步 2K�
 
 实机验证事实（改参数前先读，都是踩过的坑）：
   - turbo 模型用普通 `UNETLoader`（safetensors），unet_name 带 `qwen\` 前缀；
-    **不是** UnetLoaderGGUFAdvanced——GGUF 三参数（float32/f16/true）只适用 Q8 档
-  - Q8 GGUF 三参数：dequant_dtype=float32 + patch_dtype=float16 防黑图（Q8 反量化 NaN）；
+    **不是** UnetLoaderGGUFAdvanced——GGUF 三参数（float16/f16/true）只适用 Q8 档
+  - Q8 GGUF 三参数：dequant_dtype=float16 + patch_dtype=float16 防黑图（Q8 反量化 NaN）；
     patch_on_device 是 BOOLEAN（True=补丁驻 GPU），别传字符串
   - TextEncodeQwenImage21 图连法（API 形状）：inputs 里 key 写
     "images.image_1": ["LoadImage节点号", 0]，vae 必须连（节点出 latent 直连 KSampler.latent_image）
@@ -80,7 +80,7 @@ def wf_edit(prompt, image_name, prefix, seed=SEED, resolution=2048, denoise=1.0,
     if model == "q8":
         node1 = {"class_type": "UnetLoaderGGUFAdvanced", "inputs": {
             "unet_name": "qwen-image-2.1-UC-Q8_0.gguf",
-            "dequant_dtype": "float32", "patch_dtype": "float16",
+            "dequant_dtype": "float16", "patch_dtype": "float16",
             "patch_on_device": True}}                    # BOOLEAN！不是字符串 "cpu"
         steps = steps if steps else 20
     else:  # turbo 默认

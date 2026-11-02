@@ -10,7 +10,7 @@
 ## 管线
 1. PIL LANCZOS 把源图 2 倍预放大（妲己单：1760×2368 → 3520×4736 ≈16.7MP）
 2. 切 1792² 块、重叠 128px（grid() 自动算；3×3=9 块）
-3. 逐块：上传 → GGUF Q8（UnetLoaderGGUFAdvanced 三参数防黑图：dequant_dtype=float32 + patch_dtype=float16 + patch_on_device=True）+ qwen-image-2.1-restore LoRA 1.0 + 16 步 + 英文 restore 提示词（resolution=0 保持块尺寸）
+3. 逐块：上传 → GGUF Q8（UnetLoaderGGUFAdvanced 三参数防黑图：dequant_dtype=float16 + patch_dtype=float16 + patch_on_device=True）+ qwen-image-2.1-restore LoRA 1.0 + 16 步 + 英文 restore 提示词（resolution=0 保持块尺寸）
 4. 逐块与 LANCZOS 源做 per-channel 色彩匹配（mean/std 对齐，防块间色差）
 5. 128px 线性羽化加权拼接 → 存 TARGET
 6. 开跑前 POST /free 卸显存；ledger（pids+tiles）断点续跑；单块 error 自动重提一次，两次失败才判死

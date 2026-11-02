@@ -5,7 +5,7 @@
 - per-job resolution：jobs.json 每条可选 "resolution"（默认 2048；原生 4K 写 4096）
   —— 2026-10-27 妲己 _05 新增，stage_edit 里 resolution=j.get("resolution", 2048)
 - UnetLoaderGGUFAdvanced 三参数防黑图（Q8 GGUF 反量化 NaN）：
-  dequant_dtype=float32 + patch_dtype=float16 + patch_on_device=True（BOOLEAN 非字符串）
+  dequant_dtype=float16 + patch_dtype=float16 + patch_on_device=True（BOOLEAN 非字符串）
 - TextEncodeQwenImage21 图连法：inputs key "images.image_1": [LoadImage节点号, 0]，
   vae 必须连（节点出 latent 直连 KSampler.latent_image）
 - cfg=1.0 负词无效；euler/simple；编辑 40 步 denoise=1.0

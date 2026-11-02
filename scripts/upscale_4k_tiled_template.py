@@ -7,7 +7,7 @@
   D:/AI/ComfyUI_windows_portable/python_embeded/python.exe <本脚本>.py
 
 实机事实：
-  - GGUF Q8 三参数防黑图：dequant_dtype=float32 + patch_dtype=float16 + patch_on_device=True
+  - GGUF Q8 三参数防黑图：dequant_dtype=float16 + patch_dtype=float16 + patch_on_device=True
   - restore LoRA 1.0 + 16 步 + 英文 restore 提示词，resolution=0 保持块原尺寸
   - 块 1792² / 重叠 128；先 POST /free 清显存；ledger 断点续跑；单块 error 自动重提一次
   - 4060Ti 8G 约 20min/块，9 块 ≈ 2-3 小时（长活，让用户排期）
@@ -61,7 +61,7 @@ def wf_tile(remote, prefix, seed=SEED):
     return {
         "1": {"class_type": "UnetLoaderGGUFAdvanced", "inputs": {
             "unet_name": "qwen-image-2.1-UC-Q8_0.gguf",
-            "dequant_dtype": "float32", "patch_dtype": "float16", "patch_on_device": True}},
+            "dequant_dtype": "float16", "patch_dtype": "float16", "patch_on_device": True}},
         "2": {"class_type": "CLIPLoader", "inputs": {
             "clip_name": "qwen3vl_8b_int8_convrot.safetensors", "type": "qwen_image"}},
         "3": {"class_type": "VAELoader", "inputs": {"vae_name": "qwen_image_2.1_vae_bf16.safetensors"}},

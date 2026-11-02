@@ -444,7 +444,7 @@ metadata:
 1. **offload 死锁**（0 步 + 功耗 50-65W + 日志 `N MB offloaded`）→ 编码器 8.8G + 扩散模型 7.1G = 16.6G 远超 8G 卡。预防 = 每张之间 `POST /free` 卸载模型（脚本已内置）；已死锁 = 卸载后重提，或重启 ComfyUI。
 2. **擅自加超分/放大** → 已砍，交付止步 2K。
 3. **漏 `import shutil`** → 批量第 1 张后脚本崩。照 `scripts/cos_batch.py` 的 import 头写。
-4. **`patch_on_device` 当字符串传** → 它是 BOOLEAN。防黑图靠 `dequant_dtype=float32` + `patch_dtype=float16`。
+4. **`patch_on_device` 当字符串传** → 它是 BOOLEAN。防黑图靠 `dequant_dtype=float16` + `patch_dtype=float16`。
 5. **批量并发提交** → 8G 显存 OOM。必须串行。
 6. **识图只做一次** → 第二张盲改。夹级复用 ≠ 跳过逐张识图。
 7. **修瑕疵自创措辞** → 与 portrait.md 打架。逐字引用。
