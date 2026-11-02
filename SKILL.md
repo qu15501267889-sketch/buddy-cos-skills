@@ -431,9 +431,11 @@ metadata:
 | 叙事主题提示词范例 | `references/narrative-theme-prompt-example.md` |
 | 技能维护与发布规程 | `references/skill-maintenance-and-release.md` |
 | 批量执行脚本（每张之间自动释放显存） | `scripts/cos_batch.py` |
+| 输入预检脚本（AI 痕迹 / 低分辨率 / 摩尔纹） | `scripts/cos-preflight.py` |
+| 脚本用法说明 | `scripts/README-cos-batch.md` |
 | **污染词清洗词表** | `scripts/clean.py` |
 | 教学式回答与聊天记录格式 | `references/teaching-and-transcript.md` |
-| 历史存档（超分已砍 / 旧提案 / clawhub 原始版素材） | `references/upscale-4k-tiled.md`、`references/pipeline-v2-proposal.md`、`references/clawhub-origin/` |
+| 历史存档（超分已砍 / 旧提案 / clawhub 原始版素材） | `references/upscale-4k-tiled.md`、`references/pipeline-v2-proposal.md`、`scripts/upscale_4k_tiled_template.py`、`references/clawhub-origin/`（8 个文件，JSON 信封那套，未启用） |
 
 ---
 
